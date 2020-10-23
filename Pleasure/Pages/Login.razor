@@ -1,0 +1,88 @@
+﻿@inject Pleasure.Data.Database database
+
+@page "/register"
+@page "/login"
+
+
+@using System.Net.Mail
+
+@inject Data.Database database
+
+<EditForm Model="@register" OnValidSubmit="@HandleValidRegister">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText placeholder="Username" id="name" @bind-Value="register.UserName"></InputText>
+    <InputText placeholder="Password" type="password" id="password" name="password" @bind-Value="register.Password"></InputText>
+    <InputText placeholder="Email" type="email" id="name" name="email" @bind-Value="register.Email"></InputText>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+<EditForm Model="@login" OnValidSubmit="@HandleValidLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText placeholder="Username or Email" id="name" name="email" @bind-Value="login.UserNameOrEmail"></InputText>
+    <InputText placeholder="Password" type="password" id="password" @bind-Value="login.Password"></InputText>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+
+@foreach (var user in database.getUser())
+{
+    <p>@user.UserName</p>
+    <p>@user.Email</p>
+}
+
+
+@code {
+    private Data.LoginAndRegister.Register register = new Data.LoginAndRegister.Register();
+    private Data.LoginAndRegister.Login login = new Data.LoginAndRegister.Login();
+    string Error = "";
+
+    private void HandleValidLogin()
+    {
+        
+    }
+    private void HandleValidRegister()
+    {
+        bool NameValidationLenght = false;
+        bool ValidationAvailability = true;
+        bool PasswordValidationLenght = false;
+        bool EmailValidation = true;
+
+        if (register.UserName.Length >= 5 && register.UserName.Length <= 20)
+        {
+            NameValidationLenght = true;
+            foreach (var selectItem in database.getUser())
+            {
+                if (register.UserName == selectItem.UserName)
+                    ValidationAvailability = false;
+                if (register.Email == selectItem.Email)
+                    ValidationAvailability = false;
+            }
+        }
+        if(register.Password != null)
+        if (register.Password.Length >= 10)
+            PasswordValidationLenght = true;
+
+        try
+        {
+            var email = new MailAddress(register.Email);
+        }
+        catch
+        {
+            EmailValidation = false;
+        }
+
+        if (NameValidationLenght == true && ValidationAvailability == true && PasswordValidationLenght == true && EmailValidation == true)
+        {
+            database.addUser(register.UserName, register.Password, register.Email);
+            Error = "";
+        }
+        else
+            Error = "Error";
+    }
+}
